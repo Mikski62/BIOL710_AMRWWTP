@@ -1,0 +1,18 @@
+---
+title: "Independent Project Introduction"
+author: "Michael Hajkowski"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+# load data
+dataset <- read.csv("RPI_AMR_assessment_Hajkowski_Zhang.csv") 
+```
+
+## Introduction
+
+With the evolution and emergence of novel bacterial and viral pathogens, identifying and classifying the threats they pose is the first step toward understanding their impacts on environmental and public health. Wastewater Treatment Plants (WWTP) play a major role in disseminating antimicrobial resistance (AMR), further circulating their infectivity range (Nguyen et al., 2021). Traditional wastewater-based epidemiology (WBE) approaches rely on membrane filtration concentration and polymerase chain reaction (PCR)-based molecular methods to identify targeted microorganisms and functional genes (Harrington et al., 2022). However, nanotrap-based concentration methods paired with next-generation sequencing (NGS) for metagenomic analysis provide higher species resolution with the ability to detect AMR presence and abundance (Ahmed et al., 2023). While the identification of AMR-associated genes is important, the integrative “One Health” approach recommended by the World Health Organization (WHO) elucidates the risk severity of AMR-associated genes across human, animal, and environmental health (Smith et al., 2024). Although monitoring pathogenic shedding in wastewater influent provides insight into population-level infectious rates, there is limited knowledge on how wastewater treatment affects pathogens and AMR dissemination, particularly in effluent discharged into the ocean (Fahrenfeld et al., 2014; Gothwal & Thatikonda, 2020).
+
+To address these gaps, I propose to: (1) Develop and implement a WBE workflow integrating nanotrap technology with shotgun sequencing for metagenomic analysis, validating taxa detection accuracy using a bacterial mock community as a positive control. Detection efficacy will be assessed through taxonomic classification consistency and relative abundance comparisons (Lu et al., 2024). Data will be visualized through bar plots and heatmaps in ggplot2 (Hajkowski et al., 2024). (2) Characterize AMR gene variability across wastewater influent and effluent using the AMR One Health framework, leveraging metagenomic annotation databases (e.g., CARD, ResFinder) and quantifying AMR gene abundance through gene co-occurrence networks and functional profiling with Zhang et al. and CZID pipelines (Zhang et al., 2021). Statistical significance of AMR gene enrichment will be determined using negative binomial regression (DESeq2), with beta diversity metrics (Bray-Curtis, Jaccard) using PERMDISP2. Data will be visualized using boxplots, violin plots, and heatmaps in ggplot2 (McArthur et al., 2013). (3) Apply an integrated risk assessment by combining the quantitative risk model from Zhang et al. with the Resistance Persistence Index (RPI) from Hajkowski et al., incorporating genomic AMR determinants and pathogen virulence factors to assess public health risk using CZID and NCBI databases (Hajkowski et al., 2024). Density plots, risk heatmaps, and network graphs in ggplot2 will visualize AMR persistence and risk across samples.
