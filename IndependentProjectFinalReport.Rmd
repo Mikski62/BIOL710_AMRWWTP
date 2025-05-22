@@ -1,0 +1,114 @@
+---
+title: "IndependentProjectFinalReport"
+output:
+  pdf_document:
+    latex_engine: xelatex
+date: "2025-05-22"
+---
+
+# Metagenomic Insights into AMR Gene Prevalence in Municipal Wastewater: One Health Approach
+
+
+Data set and other supporting materials can be found in the GitHub Repository: BIOL710_AMRWWTP (https://github.com/Mikski62/BIOL710_AMRWWTP)
+
+```{r}
+# load data
+dataset <- read.csv("combined_amr_results_seasons.csv") 
+```
+
+## Introduction
+
+With the evolution and emergence of novel bacterial and viral pathogens, identifying and classifying the threats they pose is the first step toward understanding their impacts on environmental and public health. Wastewater Treatment Plants (WWTP) play a major role in disseminating antimicrobial resistance (AMR), further circulating their infectivity range (Nguyen et al., 2021). Traditional wastewater-based epidemiology (WBE) approaches rely on membrane filtration concentration and polymerase chain reaction (PCR)-based molecular methods to identify targeted microorganisms and functional genes (Harrington et al., 2022). However, nanotrap-based concentration methods paired with next-generation sequencing (NGS) for metagenomic analysis provide higher species resolution with the ability to detect AMR presence and abundance (Ahmed et al., 2023). While the identification of AMR-associated genes is important, the integrative “One Health” approach recommended by the World Health Organization (WHO) elucidates the risk severity of AMR-associated genes across human, animal, and environmental health (Smith et al., 2024). Although monitoring pathogenic shedding in wastewater influent provides insight into population-level infectious rates, there is limited knowledge on how wastewater treatment affects pathogens and AMR dissemination, particularly in effluent discharged into the ocean (Fahrenfeld et al., 2014; Gothwal & Thatikonda, 2020).
+
+To address these gaps, I propose to: (1) Develop and implement a WBE workflow integrating nanotrap technology with shotgun sequencing for metagenomic analysis, validating taxa detection accuracy using a bacterial mock community as a positive control. Detection efficacy will be assessed through taxonomic classification consistency and relative abundance comparisons (Lu et al., 2024). Data will be visualized through bar plots and heatmaps in ggplot2 (Hajkowski et al., 2024). (2) Characterize AMR gene variability across wastewater influent using the AMR One Health framework, leveraging metagenomic annotation databases (e.g., CARD, ResFinder) and quantifying AMR gene abundance through gene functional profiling with Zhang et al. and CZID pipelines (Zhang et al., 2021). Statistical significance of AMR gene enrichment was determined using a negative binomial generalized linear model (GLM) with season as a predictor. Residuals were assessed to confirm model assumptions. Data were visualized using bar plots and residual diagnostic plots in base R and ggplot2. (3) Apply an integrated risk assessment by combining the quantitative risk model from Zhang et al. with the Resistance Persistence Index (RPI) from Hajkowski et al., incorporating genomic AMR determinants and pathogen virulence factors to assess public health risk using CZID and NCBI databases (Hajkowski et al., 2024). Density plots, risk heatmaps, and network graphs in ggplot2 will visualize AMR persistence and risk across samples.
+
+### For this project I will be conducting a statistcal analyslsis on my second aim:
+
+(2) Characterize AMR gene variability across wastewater influent using the AMR One Health framework, leveraging metagenomic annotation databases (e.g., CARD, ResFinder) and quantifying AMR gene abundance through gene functional profiling with Zhang et al. and CZID pipelines (Zhang et al., 2021). Statistical significance of AMR gene enrichment was determined using a negative binomial generalized linear model (GLM) with season as a predictor. Residuals were assessed to confirm model assumptions. Data were visualized using bar plots and residual diagnostic plots in base R and ggplot2.
+
+### Hypothesis:
+Null Hypothesis: AMR gene abundance per sample is the statically similar across the two seasons (winter vs summer).
+Alternative Hypothesis: AMR gene abundance per sample is statistically higher in one season over the other (summer vs winter).
+
+### Statistical Model (https://github.com/Mikski62/BIOL710_AMRWWTP/blob/main/Introduction_Biol710.pdf):
+Because this dataset is over dispersed (variance is higher than the means, an assumption that violates Poisson models), I used a Negative binomial generalized linear model (GLM). GLM is great for this project because it accounts for over dipsersion of variances.
+
+### Visualizations:
+I used ggplot2 to create a simple bar plot showing avaerage AMR reads per sample per season,including standard error bars, legend, and titles. Winter season is color coated as blue and summer is red.
+
+### Dataset (https://github.com/Mikski62/BIOL710_AMRWWTP/blob/main/DatasetCard.md):
+This dataset includes metagenomic data from influent samples collected at a municipal wastewater treatment plant. It documents microbial community structure and antimicrobial resistance (AMR) gene presence, supporting One Health-oriented research. It was created to apply and evaluate the Resistance Persistence Index (RPI) for AMR gene burden. The dataset is in English and formatted for classification and annotation tasks.
+
+## R code Statical Analysis and Visuals
+```{r}
+# Load necessary libraries
+library(MASS)
+library(ggplot2)
+library(dplyr)
+
+# Read in your dataset
+df <- read.csv("combined_amr_results_seasons.csv")
+
+# Remove rows with missing values in key columns
+df_clean <- df %>%
+  filter(!is.na(num_reads), !is.na(Season), !is.na(sample_name))
+
+# Sum total reads per sample, grouped by season
+df_summary <- df_clean %>%
+  group_by(sample_name, Season) %>%
+  summarise(total_reads = sum(num_reads), .groups = "drop")
+
+# Fit a negative binomial model to test for seasonal differences
+glm_nb <- glm.nb(total_reads ~ Season, data = df_summary)
+
+# Display the model results
+summary(glm_nb)
+
+# Plot residuals to check model fit
+res <- residuals(glm_nb, type = "pearson")
+fitted_vals <- predict(glm_nb, type = "response")
+
+plot(fitted_vals, res,
+     main = "Residuals vs Fitted",
+     xlab = "Fitted Values",
+     ylab = "Pearson Residuals")
+abline(h = 0, lty = 2, col = "gray")
+
+# Calculate mean and standard error by season
+df_plot <- df_summary %>%
+  group_by(Season) %>%
+  summarise(mean_reads = mean(total_reads),
+            se = sd(total_reads) / sqrt(n()))
+
+# Create the bar plot
+p <- ggplot(df_plot, aes(x = Season, y = mean_reads, fill = Season)) +
+  geom_bar(stat = "identity", color = "black", width = 0.6) +
+  geom_errorbar(aes(ymin = mean_reads - se, ymax = mean_reads + se), width = 0.2) +
+  geom_text(aes(label = paste0(round(mean_reads), " ± ", round(se, 1))),
+            vjust = -0.8, size = 4.2) +
+  labs(
+    title = "Average AMR Reads Per Sample by Season",
+    y = "Mean AMR Gene Reads per Sample",
+    x = "Season",
+    fill = "Season",
+    caption = "Winter samples had significantly more AMR gene reads than summer, suggesting seasonal shifts in resistance levels."
+  ) +
+  scale_fill_manual(values = c("Summer" = "red", "Winter" = "blue")) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.caption = element_text(hjust = 0, size = 10, margin = margin(t = 10)),
+    plot.margin = margin(t = 10, r = 10, b = 30, l = 10)
+  )
+
+# Save the plot as a PNG file
+ggsave("barplot_amr_reads_by_season.png", plot = p, width = 8, height = 6, dpi = 300)
+
+# Show the plot in the viewer
+print(p)
+
+```
+## Interpretation and Discussion
+The negative binomial GLM revealed a statistically significant difference in AMR gene reads between seasons, with winter samples showing substantially higher read counts (mean = 5806 ± 1141.3) compared to summer (mean = 762 ± 59.9). This suggests that the winter season is associated with increased AMR gene prevalence, possibly due to increased antibiotic usage and environmental conditions that favor the persistence of resistant taxa. These results align with previous findings that highlight the influence of temperature, precipitation, and clinical practices on seasonal AMR trends.
+Seasonal trends reveal significantly higher AMR gene abundance in winter samples (~44x more than the summer). These patterns are consistent with previous studies attributing seasonal variation to fluctuating human activities, medical practices, and microbial communities (García-Armisen et al., 2014; Read et al., 2024). With changes in precipitation and temperature, microbial abundance decreases during the winter, easing microbial competition and creating a thermal community niche, favoring AMR-disseminating taxa (Liu et al., 2024; Ferraro et al., 2024). Additionally, microbial abundance is linked to higher temperatures, as many microbes have trouble metabolizing nutrients at low temperature due to the reduced enzyme activity and substrate affinity (D.B Nedwell, 1999).
+
+
